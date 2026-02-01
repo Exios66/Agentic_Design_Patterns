@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Agentic_Design_Patterns/notebooks/Chapter 8_ Memory Management - Code Example (LangChain and LangGraph) at main</title>
+    <style>
+        
+        :root {
+          --c-indigo-1: #3451b2;
+          --c-indigo-2: #3a5ccc;
+          --c-indigo-3: #5672cd;
+          --c-green: #1a7f37;
+          --c-red: #c53030;
+          --c-yellow: #9a6700;
+          --c-dir: #54aeff;
+          --c-gray-soft: rgba(142, 150, 170, .14);
+          --c-bg: #ffffff;
+          --c-bg-alt: #f6f6f7;
+          --c-bg-elv: #ffffff;
+          --c-text-1: rgba(60, 60, 67);
+          --c-text-2: rgba(60, 60, 67, .78);
+          --c-text-3: rgba(60, 60, 67, .56);
+          --c-border: #c2c2c4;
+          --c-divider: #e2e2e3;
+        }
+
+        
+
+        :root {
+          --c-brand-1: var(--c-indigo-1);
+          --c-brand-2: var(--c-indigo-2);
+          --c-brand-3: var(--c-indigo-3);
+          --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+          --font-family-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+          --code-line-height: 20px;
+          --code-font-size: 12px;
+          --code-color: var(--c-brand-1);
+          --code-bg: var(--c-gray-soft);
+          --code-block-bg: var(--c-bg-alt);
+          --code-block-color: var(--c-text-1);
+          --header-height: 46px;
+          --border-radius: 6px;
+          --max-content-width: 1470px;
+        }
+
+        * {
+          box-sizing: border-box;
+        }
+
+        body {
+          margin: 0;
+          padding: 0;
+          font-family: var(--font-family), sans-serif;
+          font-size: 14px;
+          line-height: 1;
+          color: var(--c-text-1);
+          background-color: var(--c-bg);
+          text-rendering: optimizeLegibility;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+          -moz-text-size-adjust: none;
+          -webkit-text-size-adjust: none;
+          text-size-adjust: none;
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .nowrap {
+          white-space: nowrap;
+        }
+
+        h1 {
+          margin-inline: 0;
+          margin-block: 16px;
+          font-size: 20px;
+          font-weight: 600;
+        }
+
+        a {
+          color: var(--c-brand-1);
+          font-weight: 500;
+          text-decoration: underline;
+          text-underline-offset: 2px;
+          text-decoration: inherit;
+          touch-action: manipulation;
+        }
+
+        a:hover {
+          color: var(--c-brand-2);
+          text-decoration: underline;
+        }
+
+        .menu {
+          background-color: var(--c-bg-alt);
+          border-bottom: 1px solid var(--c-divider);
+          overflow-x: auto;
+        }
+
+        .menu-content {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          gap: 16px;
+          padding-inline: 16px;
+          max-width: var(--max-content-width);
+          margin-inline: auto;
+        }
+
+        .menu-item {
+          display: flex;
+          align-items: center;
+          border-bottom: 2px solid transparent;
+          height: 56px;
+          padding-inline: 8px;
+        }
+
+        .menu-item a {
+          display: flex;
+          flex-direction: row;
+          gap: 8px;
+          align-items: center;
+          color: var(--c-text-1);
+          padding: 8px 10px;
+          border-radius: 4px;
+        }
+
+        .menu-item a:hover {
+          background-color: var(--c-bg-elv);
+          text-decoration: none;
+        }
+
+        .menu-item.selected {
+          border-bottom-color: var(--c-brand-1);
+        }
+
+        .project-name {
+          font-weight: 600;
+          font-size: 16px;
+          margin-inline: 16px;
+          color: var(--c-text-1);
+          text-decoration: none;
+        }
+
+        main {
+          flex-grow: 1;
+          width: 100%;
+          max-width: var(--max-content-width);
+          margin: 16px auto;
+        }
+
+        .main-content {
+          padding-inline: 16px;
+        }
+
+        footer {
+          padding: 12px 16px;
+          background-color: var(--c-bg-alt);
+          border-top: 1px solid var(--c-divider);
+          color: var(--c-text-3);
+          font-size: 12px;
+          text-align: center;
+        }
+
+        .header-container {
+          container-type: scroll-state;
+          position: sticky;
+          top: 0;
+        }
+
+        .header-container {
+          @container scroll-state(stuck: top) {
+            header {
+              border-top: none;
+              border-top-left-radius: 0;
+              border-top-right-radius: 0;
+            }
+
+            .goto-top {
+              display: flex;
+            }
+          }
+        }
+
+        header {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          min-height: var(--header-height);
+          padding-inline: 16px;
+          background: var(--c-bg-alt);
+          border: 1px solid var(--c-border);
+          border-top-left-radius: var(--border-radius);
+          border-top-right-radius: var(--border-radius);
+        }
+
+        header h1 {
+          word-break: break-all;
+          font-weight: 600;
+          font-size: 16px;
+          margin: 0;
+          padding: 0;
+        }
+
+        .header-ref {
+          color: var(--c-text-2);
+          border: 1px solid var(--c-border);
+          border-radius: 6px;
+          padding: 6px 10px;
+          margin-right: 10px;
+          margin-left: -6px;
+        }
+
+        header .path {
+          font-size: 16px;
+        }
+
+        .breadcrumbs {
+          display: flex;
+          flex-direction: row;
+          flex-wrap: wrap;
+          gap: 6px;
+          font-size: 16px;
+        }
+
+        .breadcrumbs a {
+          word-break: break-all;
+        }
+
+        .goto-top {
+          display: none;
+          margin-left: auto;
+          padding: 6px 10px;
+          background: none;
+          border: none;
+          border-radius: 6px;
+          gap: 4px;
+          align-items: center;
+          color: var(--c-text-1);
+          cursor: pointer;
+        }
+
+        .goto-top:hover {
+          background: var(--c-bg-elv);
+        }
+    </style>
+    
+    <style>
+        .bg { background-color: #ffffff; }
+.chroma { background-color: #ffffff; }
+.chroma .ln:target { background-color: #e5e5e5 }
+.chroma .lnt:target { background-color: #e5e5e5 }
+.chroma .err { color: #f6f8fa; background-color: #82071e }
+.chroma .lnlinks { outline: none; text-decoration: none; color: inherit }
+.chroma .lntd { vertical-align: top; padding: 0; margin: 0; border: 0; }
+.chroma .lntable { border-spacing: 0; padding: 0; margin: 0; border: 0; }
+.chroma .hl { background-color: #e5e5e5 }
+.chroma .lnt { white-space: pre; -webkit-user-select: none; user-select: none; margin-right: 0.4em; padding: 0 0.4em 0 0.4em;color: #7f7f7f }
+.chroma .ln { white-space: pre; -webkit-user-select: none; user-select: none; margin-right: 0.4em; padding: 0 0.4em 0 0.4em;color: #7f7f7f }
+.chroma .line { display: flex; }
+.chroma .k { color: #cf222e }
+.chroma .kc { color: #cf222e }
+.chroma .kd { color: #cf222e }
+.chroma .kn { color: #cf222e }
+.chroma .kp { color: #cf222e }
+.chroma .kr { color: #cf222e }
+.chroma .kt { color: #cf222e }
+.chroma .na { color: #1f2328 }
+.chroma .nc { color: #1f2328 }
+.chroma .no { color: #0550ae }
+.chroma .nd { color: #0550ae }
+.chroma .ni { color: #6639ba }
+.chroma .nl { color: #990000; font-weight: bold }
+.chroma .nn { color: #24292e }
+.chroma .nx { color: #1f2328 }
+.chroma .nt { color: #0550ae }
+.chroma .nb { color: #6639ba }
+.chroma .bp { color: #6a737d }
+.chroma .nv { color: #953800 }
+.chroma .vc { color: #953800 }
+.chroma .vg { color: #953800 }
+.chroma .vi { color: #953800 }
+.chroma .vm { color: #953800 }
+.chroma .nf { color: #6639ba }
+.chroma .fm { color: #6639ba }
+.chroma .s { color: #0a3069 }
+.chroma .sa { color: #0a3069 }
+.chroma .sb { color: #0a3069 }
+.chroma .sc { color: #0a3069 }
+.chroma .dl { color: #0a3069 }
+.chroma .sd { color: #0a3069 }
+.chroma .s2 { color: #0a3069 }
+.chroma .se { color: #0a3069 }
+.chroma .sh { color: #0a3069 }
+.chroma .si { color: #0a3069 }
+.chroma .sx { color: #0a3069 }
+.chroma .sr { color: #0a3069 }
+.chroma .s1 { color: #0a3069 }
+.chroma .ss { color: #032f62 }
+.chroma .m { color: #0550ae }
+.chroma .mb { color: #0550ae }
+.chroma .mf { color: #0550ae }
+.chroma .mh { color: #0550ae }
+.chroma .mi { color: #0550ae }
+.chroma .il { color: #0550ae }
+.chroma .mo { color: #0550ae }
+.chroma .o { color: #0550ae }
+.chroma .ow { color: #0550ae }
+.chroma .p { color: #1f2328 }
+.chroma .c { color: #57606a }
+.chroma .ch { color: #57606a }
+.chroma .cm { color: #57606a }
+.chroma .c1 { color: #57606a }
+.chroma .cs { color: #57606a }
+.chroma .cp { color: #57606a }
+.chroma .cpf { color: #57606a }
+.chroma .gd { color: #82071e; background-color: #ffebe9 }
+.chroma .ge { color: #1f2328 }
+.chroma .gi { color: #116329; background-color: #dafbe1 }
+.chroma .go { color: #1f2328 }
+.chroma .gl { text-decoration: underline }
+.chroma .w { color: #ffffff }
+
+
+        [id] {
+          scroll-margin-top: var(--header-height);
+        }
+
+        pre {
+          border: 1px solid var(--c-border);
+          border-top: none;
+          border-bottom-left-radius: var(--border-radius);
+          border-bottom-right-radius: var(--border-radius);
+        }
+
+        pre {
+          margin: 0;
+          padding: 8px 16px;
+          overflow-x: auto;
+          white-space: pre;
+          word-spacing: normal;
+          word-break: normal;
+          word-wrap: normal;
+          tab-size: 4;
+          font-family: var(--font-family-mono), monospace;
+        }
+
+        pre > code {
+          display: block;
+          padding: 0 16px;
+          width: fit-content;
+          min-width: 100%;
+          line-height: var(--code-line-height);
+          font-size: var(--code-font-size);
+        }
+
+        .border {
+          border: 1px solid var(--c-border);
+          border-top: none;
+          border-bottom-left-radius: 6px;
+          border-bottom-right-radius: 6px;
+        }
+
+        .binary-file {
+          padding: 8px 16px;
+          font-style: italic;
+        }
+
+        .image {
+          padding: 8px 16px;
+          text-align: center;
+        }
+
+        .image img {
+          max-width: 100%;
+          height: auto;
+        }
+    </style>
+
+</head>
+<body>
+
+    <svg style="display: none" aria-hidden="true" focusable="false">
+        <symbol id="dir" viewBox="0 0 16 16">
+            <path fill="currentColor"
+                  d="M1.75 1A1.75 1.75 0 0 0 0 2.75v10.5C0 14.216.784 15 1.75 15h12.5A1.75 1.75 0 0 0 16 13.25v-8.5A1.75 1.75 0 0 0 14.25 3H7.5a.25.25 0 0 1-.2-.1l-.9-1.2C6.07 1.26 5.55 1 5 1H1.75Z"/>
+        </symbol>
+        <symbol id="file" viewBox="0 0 16 16">
+            <path fill="currentColor"
+                  d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z"/>
+        </symbol>
+        <symbol id="file-added" viewBox="0 0 16 16">
+            <path fill="currentColor"
+                  d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V4.664a.25.25 0 0 0-.073-.177l-2.914-2.914a.25.25 0 0 0-.177-.073Zm4.48 3.758a.75.75 0 0 1 .755.745l.01 1.497h1.497a.75.75 0 0 1 0 1.5H9v1.507a.75.75 0 0 1-1.5 0V9.005l-1.502.01a.75.75 0 0 1-.01-1.5l1.507-.01-.01-1.492a.75.75 0 0 1 .745-.755Z"/>
+        </symbol>
+        <symbol id="file-modified" viewBox="0 0 16 16">
+            <path fill="currentColor"
+                  d="M1 1.75C1 .784 1.784 0 2.75 0h7.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16H2.75A1.75 1.75 0 0 1 1 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25V4.664a.25.25 0 0 0-.073-.177l-2.914-2.914a.25.25 0 0 0-.177-.073ZM8 3.25a.75.75 0 0 1 .75.75v1.5h1.5a.75.75 0 0 1 0 1.5h-1.5v1.5a.75.75 0 0 1-1.5 0V7h-1.5a.75.75 0 0 1 0-1.5h1.5V4A.75.75 0 0 1 8 3.25Zm-3 8a.75.75 0 0 1 .75-.75h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1-.75-.75Z"/>
+        </symbol>
+        <symbol id="file-deleted" viewBox="0 0 16 16">
+            <path fill="currentColor"
+                  d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V4.664a.25.25 0 0 0-.073-.177l-2.914-2.914a.25.25 0 0 0-.177-.073Zm4.5 6h2.242a.75.75 0 0 1 0 1.5h-2.24l-2.254.015a.75.75 0 0 1-.01-1.5Z"/>
+        </symbol>
+        <symbol id="file-renamed" viewBox="0 0 16 16">
+            <path fill="currentColor"
+                  d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-3.5a.75.75 0 0 1 0-1.5h3.5a.25.25 0 0 0 .25-.25V4.664a.25.25 0 0 0-.073-.177l-2.914-2.914a.25.25 0 0 0-.177-.073H3.75a.25.25 0 0 0-.25.25v6.5a.75.75 0 0 1-1.5 0v-6.5Z"/>
+            <path fill="currentColor"
+                  d="m5.427 15.573 3.146-3.146a.25.25 0 0 0 0-.354L5.427 8.927A.25.25 0 0 0 5 9.104V11.5H.75a.75.75 0 0 0 0 1.5H5v2.396c0 .223.27.335.427.177Z"/>
+        </symbol>
+        <symbol id="arrow-top" viewBox="0 0 16 16">
+            <path fill="currentColor"
+                  d="M3.47 7.78a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0l4.25 4.25a.751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018L9 4.81v7.44a.75.75 0 0 1-1.5 0V4.81L4.53 7.78a.75.75 0 0 1-1.06 0Z"></path>
+        </symbol>
+        <symbol id="commit" viewBox="0 0 16 16">
+            <path fill="currentColor"
+                  d="M11.93 8.5a4.002 4.002 0 0 1-7.86 0H.75a.75.75 0 0 1 0-1.5h3.32a4.002 4.002 0 0 1 7.86 0h3.32a.75.75 0 0 1 0 1.5Zm-1.43-.75a2.5 2.5 0 1 0-5 0 2.5 2.5 0 0 0 5 0Z"></path>
+        </symbol>
+        <symbol id="branch" viewBox="0 0 16 16">
+            <path fill="currentColor"
+                  d="M9.5 3.25a2.25 2.25 0 1 1 3 2.122V6A2.5 2.5 0 0 1 10 8.5H6a1 1 0 0 0-1 1v1.128a2.251 2.251 0 1 1-1.5 0V5.372a2.25 2.25 0 1 1 1.5 0v1.836A2.493 2.493 0 0 1 6 7h4a1 1 0 0 0 1-1v-.628A2.25 2.25 0 0 1 9.5 3.25Zm-6 0a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0Zm8.25-.75a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5ZM4.25 12a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Z"></path>
+        </symbol>
+        <symbol id="tag" viewBox="0 0 16 16">
+            <path fill="currentColor"
+                  d="M1 7.775V2.75C1 1.784 1.784 1 2.75 1h5.025c.464 0 .91.184 1.238.513l6.25 6.25a1.75 1.75 0 0 1 0 2.474l-5.026 5.026a1.75 1.75 0 0 1-2.474 0l-6.25-6.25A1.752 1.752 0 0 1 1 7.775Zm1.5 0c0 .066.026.13.073.177l6.25 6.25a.25.25 0 0 0 .354 0l5.025-5.025a.25.25 0 0 0 0-.354l-6.25-6.25a.25.25 0 0 0-.177-.073H2.75a.25.25 0 0 0-.25.25ZM6 5a1 1 0 1 1 0 2 1 1 0 0 1 0-2Z"></path>
+        </symbol>
+        <symbol id="code" viewBox="0 0 16 16">
+            <path fill="currentColor"
+                  d="m11.28 3.22 4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734L13.94 8l-3.72-3.72a.749.749 0 0 1 .326-1.275.749.749 0 0 1 .734.215Zm-6.56 0a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042L2.06 8l3.72 3.72a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L.47 8.53a.75.75 0 0 1 0-1.06Z"></path>
+        </symbol>
+    </svg>
+
+<div class="menu">
+    <div class="menu-content">
+        <a href="../../../index.html" class="project-name">Agentic_Design_Patterns</a>
+        <div class="menu-item selected">
+            <a href="../../../blob/main/index.html">
+                <svg aria-hidden="true" width="16" height="16">
+                    <use xlink:href="#code"></use>
+                </svg>
+                Code
+            </a>
+        </div>
+        <div class="menu-item ">
+            <a href="../../../branches.html">
+                <svg aria-hidden="true" focusable="false" width="16" height="16">
+                    <use xlink:href="#branch"></use>
+                </svg>
+                Branches
+            </a>
+        </div>
+        <div class="menu-item ">
+            <a href="../../../tags.html">
+                <svg aria-hidden="true" focusable="false" width="16" height="16">
+                    <use xlink:href="#tag"></use>
+                </svg>
+                Tags
+            </a>
+        </div>
+        <div class="menu-item ">
+            <a href="../../../commits/main/index.html">
+                <svg aria-hidden="true" focusable="false" width="16" height="16">
+                    <use xlink:href="#commit"></use>
+                </svg>
+                Commits
+            </a>
+        </div>
+    </div>
+</div>
+<main>
+    <div class="main-content">
+        
+    
+    <div class="header-container">
+        <header>
+            
+                <div class="header-ref" aria-label="Ref">main</div>
+            
+            
+                <nav class="breadcrumbs" aria-label="Breadcrumbs">
+                    
+                        
+                        
+                            <a href="./../index.html">Agentic_Design_Patterns</a>
+                        
+                    
+                        
+                            <div>/</div>
+                        
+                        
+                            <a href="./index.html">notebooks</a>
+                        
+                    
+                        
+                            <div>/</div>
+                        
+                        
+                            <h1>Chapter 8_ Memory Management - Code Example (LangChain and LangGraph)</h1>
+                            
+                        
+                    
+                </nav>
+            
+            <button class="goto-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+                <svg aria-hidden="true" focusable="false" width="16" height="16">
+                    <use xlink:href="#arrow-top"></use>
+                </svg>
+                Top
+            </button>
+        </header>
+    </div>
+
+    
+        <pre class="chroma"><code><span class="line"><span class="ln" id="L1"><a class="lnlinks" href="#L1">1</a></span><span class="cl">{&#34;cells&#34;:[{&#34;cell_type&#34;:&#34;code&#34;,&#34;source&#34;:[&#34;from langchain.memory import ChatMessageHistory\n&#34;,&#34;\n&#34;,&#34;# Initialize the history object\n&#34;,&#34;history = ChatMessageHistory()\n&#34;,&#34;\n&#34;,&#34;# Add user and AI messages\n&#34;,&#34;history.add_user_message(\&#34;I&#39;m heading to New York next week.\&#34;)\n&#34;,&#34;history.add_ai_message(\&#34;Great! It&#39;s a fantastic city.\&#34;)\n&#34;,&#34;\n&#34;,&#34;# Access the list of messages\n&#34;,&#34;print(history.messages)&#34;],&#34;outputs&#34;:[],&#34;execution_count&#34;:null,&#34;metadata&#34;:{&#34;id&#34;:&#34;2EzLzlDUViAT&#34;}},{&#34;cell_type&#34;:&#34;code&#34;,&#34;source&#34;:[&#34;from langchain.memory import ConversationBufferMemory\n&#34;,&#34;\n&#34;,&#34;# Initialize memory\n&#34;,&#34;memory = ConversationBufferMemory()\n&#34;,&#34;\n&#34;,&#34;# Save a conversation turn\n&#34;,&#34;memory.save_context({\&#34;input\&#34;: \&#34;What&#39;s the weather like?\&#34;}, {\&#34;output\&#34;: \&#34;It&#39;s sunny today.\&#34;})\n&#34;,&#34;\n&#34;,&#34;# Load the memory as a string\n&#34;,&#34;print(memory.load_memory_variables({}))&#34;],&#34;outputs&#34;:[{&#34;output_type&#34;:&#34;stream&#34;,&#34;name&#34;:&#34;stdout&#34;,&#34;text&#34;:[&#34;{&#39;history&#39;: \&#34;Human: What&#39;s the weather like?\\nAI: It&#39;s sunny today.\&#34;}\n&#34;]},{&#34;output_type&#34;:&#34;stream&#34;,&#34;name&#34;:&#34;stderr&#34;,&#34;text&#34;:[&#34;/tmp/ipython-input-1-1418393889.py:4: LangChainDeprecationWarning: Please see the migration guide at: https://python.langchain.com/docs/versions/migrating_memory/\n&#34;,&#34;  memory = ConversationBufferMemory()\n&#34;]}],&#34;execution_count&#34;:null,&#34;metadata&#34;:{&#34;id&#34;:&#34;PsBeTnUoViAU&#34;,&#34;colab&#34;:{&#34;base_uri&#34;:&#34;https://localhost:8080/&#34;},&#34;executionInfo&#34;:{&#34;status&#34;:&#34;ok&#34;,&#34;timestamp&#34;:1751345929854,&#34;user_tz&#34;:-120,&#34;elapsed&#34;:2897,&#34;user&#34;:{&#34;displayName&#34;:&#34;Antonio Gulli&#34;,&#34;userId&#34;:&#34;17769953396342459304&#34;}},&#34;outputId&#34;:&#34;d17b123c-577a-43cd-e437-8d4795436ac0&#34;}},{&#34;cell_type&#34;:&#34;code&#34;,&#34;source&#34;:[&#34;from langchain_openai import OpenAI\n&#34;,&#34;from langchain.chains import LLMChain\n&#34;,&#34;from langchain.prompts import PromptTemplate\n&#34;,&#34;from langchain.memory import ConversationBufferMemory\n&#34;,&#34;\n&#34;,&#34;# 1. Define LLM and Prompt\n&#34;,&#34;llm = OpenAI(temperature=0)\n&#34;,&#34;template = \&#34;\&#34;\&#34;You are a helpful travel agent.\n&#34;,&#34;\n&#34;,&#34;Previous conversation:\n&#34;,&#34;{history}\n&#34;,&#34;\n&#34;,&#34;New question: {question}\n&#34;,&#34;Response:\&#34;\&#34;\&#34;\n&#34;,&#34;prompt = PromptTemplate.from_template(template)\n&#34;,&#34;\n&#34;,&#34;# 2. Configure Memory\n&#34;,&#34;# The memory_key \&#34;history\&#34; matches the variable in the prompt\n&#34;,&#34;memory = ConversationBufferMemory(memory_key=\&#34;history\&#34;)\n&#34;,&#34;\n&#34;,&#34;# 3. Build the Chain\n&#34;,&#34;conversation = LLMChain(llm=llm, prompt=prompt, memory=memory)\n&#34;,&#34;\n&#34;,&#34;# 4. Run the Conversation\n&#34;,&#34;response = conversation.predict(question=\&#34;I want to book a flight.\&#34;)\n&#34;,&#34;print(response)\n&#34;,&#34;response = conversation.predict(question=\&#34;My name is Sam, by the way.\&#34;)\n&#34;,&#34;print(response)\n&#34;,&#34;response = conversation.predict(question=\&#34;What was my name again?\&#34;)\n&#34;,&#34;print(response)&#34;],&#34;metadata&#34;:{&#34;colab&#34;:{&#34;base_uri&#34;:&#34;https://localhost:8080/&#34;,&#34;height&#34;:393},&#34;id&#34;:&#34;qorPJSjAWfEQ&#34;,&#34;executionInfo&#34;:{&#34;status&#34;:&#34;error&#34;,&#34;timestamp&#34;:1751345955730,&#34;user_tz&#34;:-120,&#34;elapsed&#34;:88,&#34;user&#34;:{&#34;displayName&#34;:&#34;Antonio Gulli&#34;,&#34;userId&#34;:&#34;17769953396342459304&#34;}},&#34;outputId&#34;:&#34;c068f7c2-6c30-494b-a386-64c13f2f66d3&#34;},&#34;execution_count&#34;:null,&#34;outputs&#34;:[{&#34;output_type&#34;:&#34;error&#34;,&#34;ename&#34;:&#34;ModuleNotFoundError&#34;,&#34;evalue&#34;:&#34;No module named &#39;langchain_openai&#39;&#34;,&#34;traceback&#34;:[&#34;\u001b[0;31m---------------------------------------------------------------------------\u001b[0m&#34;,&#34;\u001b[0;31mModuleNotFoundError\u001b[0m                       Traceback (most recent call last)&#34;,&#34;\u001b[0;32m/tmp/ipython-input-2-2809770307.py\u001b[0m in \u001b[0;36m&lt;cell line: 0&gt;\u001b[0;34m()\u001b[0m\n\u001b[0;32m----&gt; 1\u001b[0;31m \u001b[0;32mfrom\u001b[0m \u001b[0mlangchain_openai\u001b[0m \u001b[0;32mimport\u001b[0m \u001b[0mOpenAI\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m      2\u001b[0m \u001b[0;32mfrom\u001b[0m \u001b[0mlangchain\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mchains\u001b[0m \u001b[0;32mimport\u001b[0m \u001b[0mLLMChain\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m      3\u001b[0m \u001b[0;32mfrom\u001b[0m \u001b[0mlangchain\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mprompts\u001b[0m \u001b[0;32mimport\u001b[0m \u001b[0mPromptTemplate\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m      4\u001b[0m \u001b[0;32mfrom\u001b[0m \u001b[0mlangchain\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mmemory\u001b[0m \u001b[0;32mimport\u001b[0m \u001b[0mConversationBufferMemory\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m      5\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n&#34;,&#34;\u001b[0;31mModuleNotFoundError\u001b[0m: No module named &#39;langchain_openai&#39;&#34;,&#34;&#34;,&#34;\u001b[0;31m---------------------------------------------------------------------------\u001b[0;32m\nNOTE: If your import is failing due to a missing package, you can\nmanually install dependencies using either !pip or !apt.\n\nTo view examples of installing some common dependencies, click the\n\&#34;Open Examples\&#34; button below.\n\u001b[0;31m---------------------------------------------------------------------------\u001b[0m\n&#34;],&#34;errorDetails&#34;:{&#34;actions&#34;:[{&#34;action&#34;:&#34;open_url&#34;,&#34;actionText&#34;:&#34;Open Examples&#34;,&#34;url&#34;:&#34;/notebooks/snippets/importing_libraries.ipynb&#34;}]}}]},{&#34;cell_type&#34;:&#34;code&#34;,&#34;source&#34;:[&#34;from langchain_openai import ChatOpenAI\n&#34;,&#34;from langchain.chains import LLMChain\n&#34;,&#34;from langchain.memory import ConversationBufferMemory\n&#34;,&#34;from langchain_core.prompts import (\n&#34;,&#34;    ChatPromptTemplate,\n&#34;,&#34;    MessagesPlaceholder,\n&#34;,&#34;    SystemMessagePromptTemplate,\n&#34;,&#34;    HumanMessagePromptTemplate,\n&#34;,&#34;)\n&#34;,&#34;\n&#34;,&#34;# 1. Define Chat Model and Prompt\n&#34;,&#34;llm = ChatOpenAI()\n&#34;,&#34;prompt = ChatPromptTemplate(\n&#34;,&#34;    messages=[\n&#34;,&#34;        SystemMessagePromptTemplate.from_template(\&#34;You are a friendly assistant.\&#34;),\n&#34;,&#34;        MessagesPlaceholder(variable_name=\&#34;chat_history\&#34;),\n&#34;,&#34;        HumanMessagePromptTemplate.from_template(\&#34;{question}\&#34;)\n&#34;,&#34;    ]\n&#34;,&#34;)\n&#34;,&#34;\n&#34;,&#34;# 2. Configure Memory\n&#34;,&#34;# return_messages=True is essential for chat models\n&#34;,&#34;memory = ConversationBufferMemory(memory_key=\&#34;chat_history\&#34;, return_messages=True)\n&#34;,&#34;\n&#34;,&#34;# 3. Build the Chain\n&#34;,&#34;conversation = LLMChain(llm=llm, prompt=prompt, memory=memory)\n&#34;,&#34;\n&#34;,&#34;# 4. Run the Conversation\n&#34;,&#34;response = conversation.predict(question=\&#34;Hi, I&#39;m Jane.\&#34;)\n&#34;,&#34;print(response)\n&#34;,&#34;response = conversation.predict(question=\&#34;Do you remember my name?\&#34;)\n&#34;,&#34;print(response)&#34;],&#34;metadata&#34;:{&#34;id&#34;:&#34;a_xPt-bvWoGf&#34;,&#34;executionInfo&#34;:{&#34;status&#34;:&#34;error&#34;,&#34;timestamp&#34;:1751347418324,&#34;user_tz&#34;:-120,&#34;elapsed&#34;:39,&#34;user&#34;:{&#34;displayName&#34;:&#34;Antonio Gulli&#34;,&#34;userId&#34;:&#34;17769953396342459304&#34;}},&#34;outputId&#34;:&#34;024118f4-e6bf-4b13-b3c8-4bcadc505145&#34;,&#34;colab&#34;:{&#34;base_uri&#34;:&#34;https://localhost:8080/&#34;,&#34;height&#34;:393}},&#34;execution_count&#34;:null,&#34;outputs&#34;:[{&#34;output_type&#34;:&#34;error&#34;,&#34;ename&#34;:&#34;ModuleNotFoundError&#34;,&#34;evalue&#34;:&#34;No module named &#39;langchain_openai&#39;&#34;,&#34;traceback&#34;:[&#34;\u001b[0;31m---------------------------------------------------------------------------\u001b[0m&#34;,&#34;\u001b[0;31mModuleNotFoundError\u001b[0m                       Traceback (most recent call last)&#34;,&#34;\u001b[0;32m/tmp/ipython-input-3-667661079.py\u001b[0m in \u001b[0;36m&lt;cell line: 0&gt;\u001b[0;34m()\u001b[0m\n\u001b[0;32m----&gt; 1\u001b[0;31m \u001b[0;32mfrom\u001b[0m \u001b[0mlangchain_openai\u001b[0m \u001b[0;32mimport\u001b[0m \u001b[0mChatOpenAI\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m      2\u001b[0m \u001b[0;32mfrom\u001b[0m \u001b[0mlangchain\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mchains\u001b[0m \u001b[0;32mimport\u001b[0m \u001b[0mLLMChain\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m      3\u001b[0m \u001b[0;32mfrom\u001b[0m \u001b[0mlangchain\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mmemory\u001b[0m \u001b[0;32mimport\u001b[0m \u001b[0mConversationBufferMemory\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m      4\u001b[0m from langchain_core.prompts import (\n\u001b[1;32m      5\u001b[0m     \u001b[0mChatPromptTemplate\u001b[0m\u001b[0;34m,\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n&#34;,&#34;\u001b[0;31mModuleNotFoundError\u001b[0m: No module named &#39;langchain_openai&#39;&#34;,&#34;&#34;,&#34;\u001b[0;31m---------------------------------------------------------------------------\u001b[0;32m\nNOTE: If your import is failing due to a missing package, you can\nmanually install dependencies using either !pip or !apt.\n\nTo view examples of installing some common dependencies, click the\n\&#34;Open Examples\&#34; button below.\n\u001b[0;31m---------------------------------------------------------------------------\u001b[0m\n&#34;],&#34;errorDetails&#34;:{&#34;actions&#34;:[{&#34;action&#34;:&#34;open_url&#34;,&#34;actionText&#34;:&#34;Open Examples&#34;,&#34;url&#34;:&#34;/notebooks/snippets/importing_libraries.ipynb&#34;}]}}]},{&#34;cell_type&#34;:&#34;code&#34;,&#34;source&#34;:[&#34;# Node that updates the agent&#39;s instructions\n&#34;,&#34;def update_instructions(state: State, store: BaseStore):\n&#34;,&#34;    namespace = (\&#34;instructions\&#34;,)\n&#34;,&#34;    # Get the current instructions from the store\n&#34;,&#34;    current_instructions = store.search(namespace)[0]\n&#34;,&#34;\n&#34;,&#34;    # Create a prompt to ask the LLM to reflect on the conversation\n&#34;,&#34;    # and generate new, improved instructions\n&#34;,&#34;    prompt = prompt_template.format(\n&#34;,&#34;        instructions=current_instructions.value[\&#34;instructions\&#34;],\n&#34;,&#34;        conversation=state[\&#34;messages\&#34;]\n&#34;,&#34;    )\n&#34;,&#34;\n&#34;,&#34;    # Get the new instructions from the LLM\n&#34;,&#34;    output = llm.invoke(prompt)\n&#34;,&#34;    new_instructions = output[&#39;new_instructions&#39;]\n&#34;,&#34;\n&#34;,&#34;    # Save the updated instructions back to the store\n&#34;,&#34;    store.put((\&#34;agent_instructions\&#34;,), \&#34;agent_a\&#34;, {\&#34;instructions\&#34;: new_instructions})\n&#34;,&#34;\n&#34;,&#34;\n&#34;,&#34;# Node that uses the instructions to generate a response\n&#34;,&#34;def call_model(state: State, store: BaseStore):\n&#34;,&#34;    namespace = (\&#34;agent_instructions\&#34;, )\n&#34;,&#34;    # Retrieve the latest instructions from the store\n&#34;,&#34;    instructions = store.get(namespace, key=\&#34;agent_a\&#34;)[0]\n&#34;,&#34;\n&#34;,&#34;    # Use the retrieved instructions to format the prompt\n&#34;,&#34;    prompt = prompt_template.format(instructions=instructions.value[\&#34;instructions\&#34;])\n&#34;,&#34;    # ... application logic continues&#34;],&#34;metadata&#34;:{&#34;id&#34;:&#34;uT31zxNbcNPi&#34;,&#34;executionInfo&#34;:{&#34;status&#34;:&#34;error&#34;,&#34;timestamp&#34;:1751347530751,&#34;user_tz&#34;:-120,&#34;elapsed&#34;:49,&#34;user&#34;:{&#34;displayName&#34;:&#34;Antonio Gulli&#34;,&#34;userId&#34;:&#34;17769953396342459304&#34;}},&#34;outputId&#34;:&#34;fe11a3c8-4d97-4adc-e20b-770cea2111c0&#34;,&#34;colab&#34;:{&#34;base_uri&#34;:&#34;https://localhost:8080/&#34;,&#34;height&#34;:216}},&#34;execution_count&#34;:4,&#34;outputs&#34;:[{&#34;output_type&#34;:&#34;error&#34;,&#34;ename&#34;:&#34;NameError&#34;,&#34;evalue&#34;:&#34;name &#39;State&#39; is not defined&#34;,&#34;traceback&#34;:[&#34;\u001b[0;31m---------------------------------------------------------------------------\u001b[0m&#34;,&#34;\u001b[0;31mNameError\u001b[0m                                 Traceback (most recent call last)&#34;,&#34;\u001b[0;32m/tmp/ipython-input-4-3607473729.py\u001b[0m in \u001b[0;36m&lt;cell line: 0&gt;\u001b[0;34m()\u001b[0m\n\u001b[1;32m      1\u001b[0m \u001b[0;31m# Node that updates the agent&#39;s instructions\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m----&gt; 2\u001b[0;31m \u001b[0;32mdef\u001b[0m \u001b[0mupdate_instructions\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mstate\u001b[0m\u001b[0;34m:\u001b[0m \u001b[0mState\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mstore\u001b[0m\u001b[0;34m:\u001b[0m \u001b[0mBaseStore\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m      3\u001b[0m     \u001b[0mnamespace\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0;34m(\u001b[0m\u001b[0;34m\&#34;instructions\&#34;\u001b[0m\u001b[0;34m,\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m      4\u001b[0m     \u001b[0;31m# Get the current instructions from the store\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m      5\u001b[0m     \u001b[0mcurrent_instructions\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mstore\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0msearch\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mnamespace\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0;36m0\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n&#34;,&#34;\u001b[0;31mNameError\u001b[0m: name &#39;State&#39; is not defined&#34;]}]},{&#34;cell_type&#34;:&#34;code&#34;,&#34;source&#34;:[&#34;from langgraph.store.memory import InMemoryStore\n&#34;,&#34;\n&#34;,&#34;# A placeholder for a real embedding function\n&#34;,&#34;def embed(texts: list[str]) -&gt; list[list[float]]:\n&#34;,&#34;    # In a real application, use a proper embedding model\n&#34;,&#34;    return [[1.0, 2.0] for _ in texts]\n&#34;,&#34;\n&#34;,&#34;# Initialize an in-memory store. For production, use a database-backed store.\n&#34;,&#34;store = InMemoryStore(index={\&#34;embed\&#34;: embed, \&#34;dims\&#34;: 2})\n&#34;,&#34;\n&#34;,&#34;# Define a namespace for a specific user and application context\n&#34;,&#34;user_id = \&#34;my-user\&#34;\n&#34;,&#34;application_context = \&#34;chitchat\&#34;\n&#34;,&#34;namespace = (user_id, application_context)\n&#34;,&#34;\n&#34;,&#34;# 1. Put a memory into the store\n&#34;,&#34;store.put(\n&#34;,&#34;    namespace,\n&#34;,&#34;    \&#34;a-memory\&#34;,  # The key for this memory\n&#34;,&#34;    {\n&#34;,&#34;        \&#34;rules\&#34;: [\n&#34;,&#34;            \&#34;User likes short, direct language\&#34;,\n&#34;,&#34;            \&#34;User only speaks English &amp; python\&#34;,\n&#34;,&#34;        ],\n&#34;,&#34;        \&#34;my-key\&#34;: \&#34;my-value\&#34;,\n&#34;,&#34;    },\n&#34;,&#34;)\n&#34;,&#34;\n&#34;,&#34;# 2. Get the memory by its namespace and key\n&#34;,&#34;item = store.get(namespace, \&#34;a-memory\&#34;)\n&#34;,&#34;print(\&#34;Retrieved Item:\&#34;, item)\n&#34;,&#34;\n&#34;,&#34;# 3. Search for memories within the namespace, filtering by content\n&#34;,&#34;# and sorting by vector similarity to the query.\n&#34;,&#34;items = store.search(\n&#34;,&#34;    namespace,\n&#34;,&#34;    filter={\&#34;my-key\&#34;: \&#34;my-value\&#34;},\n&#34;,&#34;    query=\&#34;language preferences\&#34;\n&#34;,&#34;)\n&#34;,&#34;print(\&#34;Search Results:\&#34;, items)&#34;],&#34;metadata&#34;:{&#34;id&#34;:&#34;ZMFeT6pEcor7&#34;},&#34;execution_count&#34;:null,&#34;outputs&#34;:[]}],&#34;metadata&#34;:{&#34;colab&#34;:{&#34;provenance&#34;:[]},&#34;kernelspec&#34;:{&#34;display_name&#34;:&#34;Python 3&#34;,&#34;name&#34;:&#34;python3&#34;}},&#34;nbformat&#34;:4,&#34;nbformat_minor&#34;:0}</span></span></code></pre>
+    
+
+    </div>
+</main>
+<footer>
+    Generated by <a href="https://github.com/antonmedv/gitmal">Gitmal</a>
+</footer>
+</body>
+</html>

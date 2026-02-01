@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Agentic_Design_Patterns/notebooks/Chapter 20_ Prioritization (SuperSimplePM) at main</title>
+    <style>
+        
+        :root {
+          --c-indigo-1: #3451b2;
+          --c-indigo-2: #3a5ccc;
+          --c-indigo-3: #5672cd;
+          --c-green: #1a7f37;
+          --c-red: #c53030;
+          --c-yellow: #9a6700;
+          --c-dir: #54aeff;
+          --c-gray-soft: rgba(142, 150, 170, .14);
+          --c-bg: #ffffff;
+          --c-bg-alt: #f6f6f7;
+          --c-bg-elv: #ffffff;
+          --c-text-1: rgba(60, 60, 67);
+          --c-text-2: rgba(60, 60, 67, .78);
+          --c-text-3: rgba(60, 60, 67, .56);
+          --c-border: #c2c2c4;
+          --c-divider: #e2e2e3;
+        }
+
+        
+
+        :root {
+          --c-brand-1: var(--c-indigo-1);
+          --c-brand-2: var(--c-indigo-2);
+          --c-brand-3: var(--c-indigo-3);
+          --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+          --font-family-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+          --code-line-height: 20px;
+          --code-font-size: 12px;
+          --code-color: var(--c-brand-1);
+          --code-bg: var(--c-gray-soft);
+          --code-block-bg: var(--c-bg-alt);
+          --code-block-color: var(--c-text-1);
+          --header-height: 46px;
+          --border-radius: 6px;
+          --max-content-width: 1470px;
+        }
+
+        * {
+          box-sizing: border-box;
+        }
+
+        body {
+          margin: 0;
+          padding: 0;
+          font-family: var(--font-family), sans-serif;
+          font-size: 14px;
+          line-height: 1;
+          color: var(--c-text-1);
+          background-color: var(--c-bg);
+          text-rendering: optimizeLegibility;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+          -moz-text-size-adjust: none;
+          -webkit-text-size-adjust: none;
+          text-size-adjust: none;
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .nowrap {
+          white-space: nowrap;
+        }
+
+        h1 {
+          margin-inline: 0;
+          margin-block: 16px;
+          font-size: 20px;
+          font-weight: 600;
+        }
+
+        a {
+          color: var(--c-brand-1);
+          font-weight: 500;
+          text-decoration: underline;
+          text-underline-offset: 2px;
+          text-decoration: inherit;
+          touch-action: manipulation;
+        }
+
+        a:hover {
+          color: var(--c-brand-2);
+          text-decoration: underline;
+        }
+
+        .menu {
+          background-color: var(--c-bg-alt);
+          border-bottom: 1px solid var(--c-divider);
+          overflow-x: auto;
+        }
+
+        .menu-content {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          gap: 16px;
+          padding-inline: 16px;
+          max-width: var(--max-content-width);
+          margin-inline: auto;
+        }
+
+        .menu-item {
+          display: flex;
+          align-items: center;
+          border-bottom: 2px solid transparent;
+          height: 56px;
+          padding-inline: 8px;
+        }
+
+        .menu-item a {
+          display: flex;
+          flex-direction: row;
+          gap: 8px;
+          align-items: center;
+          color: var(--c-text-1);
+          padding: 8px 10px;
+          border-radius: 4px;
+        }
+
+        .menu-item a:hover {
+          background-color: var(--c-bg-elv);
+          text-decoration: none;
+        }
+
+        .menu-item.selected {
+          border-bottom-color: var(--c-brand-1);
+        }
+
+        .project-name {
+          font-weight: 600;
+          font-size: 16px;
+          margin-inline: 16px;
+          color: var(--c-text-1);
+          text-decoration: none;
+        }
+
+        main {
+          flex-grow: 1;
+          width: 100%;
+          max-width: var(--max-content-width);
+          margin: 16px auto;
+        }
+
+        .main-content {
+          padding-inline: 16px;
+        }
+
+        footer {
+          padding: 12px 16px;
+          background-color: var(--c-bg-alt);
+          border-top: 1px solid var(--c-divider);
+          color: var(--c-text-3);
+          font-size: 12px;
+          text-align: center;
+        }
+
+        .header-container {
+          container-type: scroll-state;
+          position: sticky;
+          top: 0;
+        }
+
+        .header-container {
+          @container scroll-state(stuck: top) {
+            header {
+              border-top: none;
+              border-top-left-radius: 0;
+              border-top-right-radius: 0;
+            }
+
+            .goto-top {
+              display: flex;
+            }
+          }
+        }
+
+        header {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          min-height: var(--header-height);
+          padding-inline: 16px;
+          background: var(--c-bg-alt);
+          border: 1px solid var(--c-border);
+          border-top-left-radius: var(--border-radius);
+          border-top-right-radius: var(--border-radius);
+        }
+
+        header h1 {
+          word-break: break-all;
+          font-weight: 600;
+          font-size: 16px;
+          margin: 0;
+          padding: 0;
+        }
+
+        .header-ref {
+          color: var(--c-text-2);
+          border: 1px solid var(--c-border);
+          border-radius: 6px;
+          padding: 6px 10px;
+          margin-right: 10px;
+          margin-left: -6px;
+        }
+
+        header .path {
+          font-size: 16px;
+        }
+
+        .breadcrumbs {
+          display: flex;
+          flex-direction: row;
+          flex-wrap: wrap;
+          gap: 6px;
+          font-size: 16px;
+        }
+
+        .breadcrumbs a {
+          word-break: break-all;
+        }
+
+        .goto-top {
+          display: none;
+          margin-left: auto;
+          padding: 6px 10px;
+          background: none;
+          border: none;
+          border-radius: 6px;
+          gap: 4px;
+          align-items: center;
+          color: var(--c-text-1);
+          cursor: pointer;
+        }
+
+        .goto-top:hover {
+          background: var(--c-bg-elv);
+        }
+    </style>
+    
+    <style>
+        .bg { background-color: #ffffff; }
+.chroma { background-color: #ffffff; }
+.chroma .ln:target { background-color: #e5e5e5 }
+.chroma .lnt:target { background-color: #e5e5e5 }
+.chroma .err { color: #f6f8fa; background-color: #82071e }
+.chroma .lnlinks { outline: none; text-decoration: none; color: inherit }
+.chroma .lntd { vertical-align: top; padding: 0; margin: 0; border: 0; }
+.chroma .lntable { border-spacing: 0; padding: 0; margin: 0; border: 0; }
+.chroma .hl { background-color: #e5e5e5 }
+.chroma .lnt { white-space: pre; -webkit-user-select: none; user-select: none; margin-right: 0.4em; padding: 0 0.4em 0 0.4em;color: #7f7f7f }
+.chroma .ln { white-space: pre; -webkit-user-select: none; user-select: none; margin-right: 0.4em; padding: 0 0.4em 0 0.4em;color: #7f7f7f }
+.chroma .line { display: flex; }
+.chroma .k { color: #cf222e }
+.chroma .kc { color: #cf222e }
+.chroma .kd { color: #cf222e }
+.chroma .kn { color: #cf222e }
+.chroma .kp { color: #cf222e }
+.chroma .kr { color: #cf222e }
+.chroma .kt { color: #cf222e }
+.chroma .na { color: #1f2328 }
+.chroma .nc { color: #1f2328 }
+.chroma .no { color: #0550ae }
+.chroma .nd { color: #0550ae }
+.chroma .ni { color: #6639ba }
+.chroma .nl { color: #990000; font-weight: bold }
+.chroma .nn { color: #24292e }
+.chroma .nx { color: #1f2328 }
+.chroma .nt { color: #0550ae }
+.chroma .nb { color: #6639ba }
+.chroma .bp { color: #6a737d }
+.chroma .nv { color: #953800 }
+.chroma .vc { color: #953800 }
+.chroma .vg { color: #953800 }
+.chroma .vi { color: #953800 }
+.chroma .vm { color: #953800 }
+.chroma .nf { color: #6639ba }
+.chroma .fm { color: #6639ba }
+.chroma .s { color: #0a3069 }
+.chroma .sa { color: #0a3069 }
+.chroma .sb { color: #0a3069 }
+.chroma .sc { color: #0a3069 }
+.chroma .dl { color: #0a3069 }
+.chroma .sd { color: #0a3069 }
+.chroma .s2 { color: #0a3069 }
+.chroma .se { color: #0a3069 }
+.chroma .sh { color: #0a3069 }
+.chroma .si { color: #0a3069 }
+.chroma .sx { color: #0a3069 }
+.chroma .sr { color: #0a3069 }
+.chroma .s1 { color: #0a3069 }
+.chroma .ss { color: #032f62 }
+.chroma .m { color: #0550ae }
+.chroma .mb { color: #0550ae }
+.chroma .mf { color: #0550ae }
+.chroma .mh { color: #0550ae }
+.chroma .mi { color: #0550ae }
+.chroma .il { color: #0550ae }
+.chroma .mo { color: #0550ae }
+.chroma .o { color: #0550ae }
+.chroma .ow { color: #0550ae }
+.chroma .p { color: #1f2328 }
+.chroma .c { color: #57606a }
+.chroma .ch { color: #57606a }
+.chroma .cm { color: #57606a }
+.chroma .c1 { color: #57606a }
+.chroma .cs { color: #57606a }
+.chroma .cp { color: #57606a }
+.chroma .cpf { color: #57606a }
+.chroma .gd { color: #82071e; background-color: #ffebe9 }
+.chroma .ge { color: #1f2328 }
+.chroma .gi { color: #116329; background-color: #dafbe1 }
+.chroma .go { color: #1f2328 }
+.chroma .gl { text-decoration: underline }
+.chroma .w { color: #ffffff }
+
+
+        [id] {
+          scroll-margin-top: var(--header-height);
+        }
+
+        pre {
+          border: 1px solid var(--c-border);
+          border-top: none;
+          border-bottom-left-radius: var(--border-radius);
+          border-bottom-right-radius: var(--border-radius);
+        }
+
+        pre {
+          margin: 0;
+          padding: 8px 16px;
+          overflow-x: auto;
+          white-space: pre;
+          word-spacing: normal;
+          word-break: normal;
+          word-wrap: normal;
+          tab-size: 4;
+          font-family: var(--font-family-mono), monospace;
+        }
+
+        pre > code {
+          display: block;
+          padding: 0 16px;
+          width: fit-content;
+          min-width: 100%;
+          line-height: var(--code-line-height);
+          font-size: var(--code-font-size);
+        }
+
+        .border {
+          border: 1px solid var(--c-border);
+          border-top: none;
+          border-bottom-left-radius: 6px;
+          border-bottom-right-radius: 6px;
+        }
+
+        .binary-file {
+          padding: 8px 16px;
+          font-style: italic;
+        }
+
+        .image {
+          padding: 8px 16px;
+          text-align: center;
+        }
+
+        .image img {
+          max-width: 100%;
+          height: auto;
+        }
+    </style>
+
+</head>
+<body>
+
+    <svg style="display: none" aria-hidden="true" focusable="false">
+        <symbol id="dir" viewBox="0 0 16 16">
+            <path fill="currentColor"
+                  d="M1.75 1A1.75 1.75 0 0 0 0 2.75v10.5C0 14.216.784 15 1.75 15h12.5A1.75 1.75 0 0 0 16 13.25v-8.5A1.75 1.75 0 0 0 14.25 3H7.5a.25.25 0 0 1-.2-.1l-.9-1.2C6.07 1.26 5.55 1 5 1H1.75Z"/>
+        </symbol>
+        <symbol id="file" viewBox="0 0 16 16">
+            <path fill="currentColor"
+                  d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z"/>
+        </symbol>
+        <symbol id="file-added" viewBox="0 0 16 16">
+            <path fill="currentColor"
+                  d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V4.664a.25.25 0 0 0-.073-.177l-2.914-2.914a.25.25 0 0 0-.177-.073Zm4.48 3.758a.75.75 0 0 1 .755.745l.01 1.497h1.497a.75.75 0 0 1 0 1.5H9v1.507a.75.75 0 0 1-1.5 0V9.005l-1.502.01a.75.75 0 0 1-.01-1.5l1.507-.01-.01-1.492a.75.75 0 0 1 .745-.755Z"/>
+        </symbol>
+        <symbol id="file-modified" viewBox="0 0 16 16">
+            <path fill="currentColor"
+                  d="M1 1.75C1 .784 1.784 0 2.75 0h7.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16H2.75A1.75 1.75 0 0 1 1 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25V4.664a.25.25 0 0 0-.073-.177l-2.914-2.914a.25.25 0 0 0-.177-.073ZM8 3.25a.75.75 0 0 1 .75.75v1.5h1.5a.75.75 0 0 1 0 1.5h-1.5v1.5a.75.75 0 0 1-1.5 0V7h-1.5a.75.75 0 0 1 0-1.5h1.5V4A.75.75 0 0 1 8 3.25Zm-3 8a.75.75 0 0 1 .75-.75h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1-.75-.75Z"/>
+        </symbol>
+        <symbol id="file-deleted" viewBox="0 0 16 16">
+            <path fill="currentColor"
+                  d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V4.664a.25.25 0 0 0-.073-.177l-2.914-2.914a.25.25 0 0 0-.177-.073Zm4.5 6h2.242a.75.75 0 0 1 0 1.5h-2.24l-2.254.015a.75.75 0 0 1-.01-1.5Z"/>
+        </symbol>
+        <symbol id="file-renamed" viewBox="0 0 16 16">
+            <path fill="currentColor"
+                  d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-3.5a.75.75 0 0 1 0-1.5h3.5a.25.25 0 0 0 .25-.25V4.664a.25.25 0 0 0-.073-.177l-2.914-2.914a.25.25 0 0 0-.177-.073H3.75a.25.25 0 0 0-.25.25v6.5a.75.75 0 0 1-1.5 0v-6.5Z"/>
+            <path fill="currentColor"
+                  d="m5.427 15.573 3.146-3.146a.25.25 0 0 0 0-.354L5.427 8.927A.25.25 0 0 0 5 9.104V11.5H.75a.75.75 0 0 0 0 1.5H5v2.396c0 .223.27.335.427.177Z"/>
+        </symbol>
+        <symbol id="arrow-top" viewBox="0 0 16 16">
+            <path fill="currentColor"
+                  d="M3.47 7.78a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0l4.25 4.25a.751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018L9 4.81v7.44a.75.75 0 0 1-1.5 0V4.81L4.53 7.78a.75.75 0 0 1-1.06 0Z"></path>
+        </symbol>
+        <symbol id="commit" viewBox="0 0 16 16">
+            <path fill="currentColor"
+                  d="M11.93 8.5a4.002 4.002 0 0 1-7.86 0H.75a.75.75 0 0 1 0-1.5h3.32a4.002 4.002 0 0 1 7.86 0h3.32a.75.75 0 0 1 0 1.5Zm-1.43-.75a2.5 2.5 0 1 0-5 0 2.5 2.5 0 0 0 5 0Z"></path>
+        </symbol>
+        <symbol id="branch" viewBox="0 0 16 16">
+            <path fill="currentColor"
+                  d="M9.5 3.25a2.25 2.25 0 1 1 3 2.122V6A2.5 2.5 0 0 1 10 8.5H6a1 1 0 0 0-1 1v1.128a2.251 2.251 0 1 1-1.5 0V5.372a2.25 2.25 0 1 1 1.5 0v1.836A2.493 2.493 0 0 1 6 7h4a1 1 0 0 0 1-1v-.628A2.25 2.25 0 0 1 9.5 3.25Zm-6 0a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0Zm8.25-.75a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5ZM4.25 12a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Z"></path>
+        </symbol>
+        <symbol id="tag" viewBox="0 0 16 16">
+            <path fill="currentColor"
+                  d="M1 7.775V2.75C1 1.784 1.784 1 2.75 1h5.025c.464 0 .91.184 1.238.513l6.25 6.25a1.75 1.75 0 0 1 0 2.474l-5.026 5.026a1.75 1.75 0 0 1-2.474 0l-6.25-6.25A1.752 1.752 0 0 1 1 7.775Zm1.5 0c0 .066.026.13.073.177l6.25 6.25a.25.25 0 0 0 .354 0l5.025-5.025a.25.25 0 0 0 0-.354l-6.25-6.25a.25.25 0 0 0-.177-.073H2.75a.25.25 0 0 0-.25.25ZM6 5a1 1 0 1 1 0 2 1 1 0 0 1 0-2Z"></path>
+        </symbol>
+        <symbol id="code" viewBox="0 0 16 16">
+            <path fill="currentColor"
+                  d="m11.28 3.22 4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734L13.94 8l-3.72-3.72a.749.749 0 0 1 .326-1.275.749.749 0 0 1 .734.215Zm-6.56 0a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042L2.06 8l3.72 3.72a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L.47 8.53a.75.75 0 0 1 0-1.06Z"></path>
+        </symbol>
+    </svg>
+
+<div class="menu">
+    <div class="menu-content">
+        <a href="../../../index.html" class="project-name">Agentic_Design_Patterns</a>
+        <div class="menu-item selected">
+            <a href="../../../blob/main/index.html">
+                <svg aria-hidden="true" width="16" height="16">
+                    <use xlink:href="#code"></use>
+                </svg>
+                Code
+            </a>
+        </div>
+        <div class="menu-item ">
+            <a href="../../../branches.html">
+                <svg aria-hidden="true" focusable="false" width="16" height="16">
+                    <use xlink:href="#branch"></use>
+                </svg>
+                Branches
+            </a>
+        </div>
+        <div class="menu-item ">
+            <a href="../../../tags.html">
+                <svg aria-hidden="true" focusable="false" width="16" height="16">
+                    <use xlink:href="#tag"></use>
+                </svg>
+                Tags
+            </a>
+        </div>
+        <div class="menu-item ">
+            <a href="../../../commits/main/index.html">
+                <svg aria-hidden="true" focusable="false" width="16" height="16">
+                    <use xlink:href="#commit"></use>
+                </svg>
+                Commits
+            </a>
+        </div>
+    </div>
+</div>
+<main>
+    <div class="main-content">
+        
+    
+    <div class="header-container">
+        <header>
+            
+                <div class="header-ref" aria-label="Ref">main</div>
+            
+            
+                <nav class="breadcrumbs" aria-label="Breadcrumbs">
+                    
+                        
+                        
+                            <a href="./../index.html">Agentic_Design_Patterns</a>
+                        
+                    
+                        
+                            <div>/</div>
+                        
+                        
+                            <a href="./index.html">notebooks</a>
+                        
+                    
+                        
+                            <div>/</div>
+                        
+                        
+                            <h1>Chapter 20_ Prioritization (SuperSimplePM)</h1>
+                            
+                        
+                    
+                </nav>
+            
+            <button class="goto-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+                <svg aria-hidden="true" focusable="false" width="16" height="16">
+                    <use xlink:href="#arrow-top"></use>
+                </svg>
+                Top
+            </button>
+        </header>
+    </div>
+
+    
+        <pre class="chroma"><code><span class="line"><span class="ln" id="L1"><a class="lnlinks" href="#L1">1</a></span><span class="cl">{&#34;nbformat&#34;:4,&#34;nbformat_minor&#34;:0,&#34;metadata&#34;:{&#34;colab&#34;:{&#34;provenance&#34;:[{&#34;file_id&#34;:&#34;1-eAjTlNP1jq1bcRNhpw39hiYsuKV-8Cd&#34;,&#34;timestamp&#34;:1749136476078}],&#34;authorship_tag&#34;:&#34;ABX9TyOZlRoKSKtHG+mnUgOpcaUu&#34;},&#34;kernelspec&#34;:{&#34;name&#34;:&#34;python3&#34;,&#34;display_name&#34;:&#34;Python 3&#34;},&#34;language_info&#34;:{&#34;name&#34;:&#34;python&#34;}},&#34;cells&#34;:[{&#34;cell_type&#34;:&#34;code&#34;,&#34;execution_count&#34;:null,&#34;metadata&#34;:{&#34;id&#34;:&#34;QMUWyDSjx-VH&#34;},&#34;outputs&#34;:[],&#34;source&#34;:[&#34;import os\n&#34;,&#34;import asyncio\n&#34;,&#34;from typing import List, Optional, Dict, Type\n&#34;,&#34;\n&#34;,&#34;from dotenv import load_dotenv\n&#34;,&#34;from pydantic import BaseModel, Field\n&#34;,&#34;\n&#34;,&#34;from langchain_core.prompts import ChatPromptTemplate\n&#34;,&#34;from langchain_core.tools import Tool\n&#34;,&#34;from langchain_openai import ChatOpenAI\n&#34;,&#34;from langchain.agents import AgentExecutor, create_react_agent\n&#34;,&#34;from langchain.memory import ConversationBufferMemory\n&#34;,&#34;\n&#34;,&#34;# --- 0. Configuration and Setup ---\n&#34;,&#34;# Loads the OPENAI_API_KEY from the .env file.\n&#34;,&#34;load_dotenv()\n&#34;,&#34;\n&#34;,&#34;# The ChatOpenAI client automatically picks up the API key from the environment.\n&#34;,&#34;llm = ChatOpenAI(temperature=0.5, model=\&#34;gpt-4o-mini\&#34;)\n&#34;,&#34;\n&#34;,&#34;# --- 1. Task Management System ---\n&#34;,&#34;\n&#34;,&#34;class Task(BaseModel):\n&#34;,&#34;    \&#34;\&#34;\&#34;Represents a single task in the system.\&#34;\&#34;\&#34;\n&#34;,&#34;    id: str\n&#34;,&#34;    description: str\n&#34;,&#34;    priority: Optional[str] = None  # P0, P1, P2\n&#34;,&#34;    assigned_to: Optional[str] = None # Name of the worker\n&#34;,&#34;\n&#34;,&#34;class SuperSimpleTaskManager:\n&#34;,&#34;    \&#34;\&#34;\&#34;An efficient and robust in-memory task manager.\&#34;\&#34;\&#34;\n&#34;,&#34;    def __init__(self):\n&#34;,&#34;        # Use a dictionary for O(1) lookups, updates, and deletions.\n&#34;,&#34;        self.tasks: Dict[str, Task] = {}\n&#34;,&#34;        self.next_task_id = 1\n&#34;,&#34;\n&#34;,&#34;    def create_task(self, description: str) -&gt; Task:\n&#34;,&#34;        \&#34;\&#34;\&#34;Creates and stores a new task.\&#34;\&#34;\&#34;\n&#34;,&#34;        task_id = f\&#34;TASK-{self.next_task_id:03d}\&#34;\n&#34;,&#34;        new_task = Task(id=task_id, description=description)\n&#34;,&#34;        self.tasks[task_id] = new_task\n&#34;,&#34;        self.next_task_id += 1\n&#34;,&#34;        print(f\&#34;DEBUG: Task created - {task_id}: {description}\&#34;)\n&#34;,&#34;        return new_task\n&#34;,&#34;\n&#34;,&#34;    def update_task(self, task_id: str, **kwargs) -&gt; Optional[Task]:\n&#34;,&#34;        \&#34;\&#34;\&#34;Safely updates a task using Pydantic&#39;s model_copy.\&#34;\&#34;\&#34;\n&#34;,&#34;        task = self.tasks.get(task_id)\n&#34;,&#34;        if task:\n&#34;,&#34;            # Use model_copy for type-safe updates.\n&#34;,&#34;            update_data = {k: v for k, v in kwargs.items() if v is not None}\n&#34;,&#34;            updated_task = task.model_copy(update=update_data)\n&#34;,&#34;            self.tasks[task_id] = updated_task\n&#34;,&#34;            print(f\&#34;DEBUG: Task {task_id} updated with {update_data}\&#34;)\n&#34;,&#34;            return updated_task\n&#34;,&#34;\n&#34;,&#34;        print(f\&#34;DEBUG: Task {task_id} not found for update.\&#34;)\n&#34;,&#34;        return None\n&#34;,&#34;\n&#34;,&#34;    def list_all_tasks(self) -&gt; str:\n&#34;,&#34;        \&#34;\&#34;\&#34;Lists all tasks currently in the system.\&#34;\&#34;\&#34;\n&#34;,&#34;        if not self.tasks:\n&#34;,&#34;            return \&#34;No tasks in the system.\&#34;\n&#34;,&#34;\n&#34;,&#34;        task_strings = []\n&#34;,&#34;        for task in self.tasks.values():\n&#34;,&#34;            task_strings.append(\n&#34;,&#34;                f\&#34;ID: {task.id}, Desc: &#39;{task.description}&#39;, \&#34;\n&#34;,&#34;                f\&#34;Priority: {task.priority or &#39;N/A&#39;}, \&#34;\n&#34;,&#34;                f\&#34;Assigned To: {task.assigned_to or &#39;N/A&#39;}\&#34;\n&#34;,&#34;            )\n&#34;,&#34;        return \&#34;Current Tasks:\\n\&#34; + \&#34;\\n\&#34;.join(task_strings)\n&#34;,&#34;\n&#34;,&#34;task_manager = SuperSimpleTaskManager()\n&#34;,&#34;\n&#34;,&#34;# --- 2. Tools for the Project Manager Agent ---\n&#34;,&#34;\n&#34;,&#34;# Use Pydantic models for tool arguments for better validation and clarity.\n&#34;,&#34;class CreateTaskArgs(BaseModel):\n&#34;,&#34;    description: str = Field(description=\&#34;A detailed description of the task.\&#34;)\n&#34;,&#34;\n&#34;,&#34;class PriorityArgs(BaseModel):\n&#34;,&#34;    task_id: str = Field(description=\&#34;The ID of the task to update, e.g., &#39;TASK-001&#39;.\&#34;)\n&#34;,&#34;    priority: str = Field(description=\&#34;The priority to set. Must be one of: &#39;P0&#39;, &#39;P1&#39;, &#39;P2&#39;.\&#34;)\n&#34;,&#34;\n&#34;,&#34;class AssignWorkerArgs(BaseModel):\n&#34;,&#34;    task_id: str = Field(description=\&#34;The ID of the task to update, e.g., &#39;TASK-001&#39;.\&#34;)\n&#34;,&#34;    worker_name: str = Field(description=\&#34;The name of the worker to assign the task to.\&#34;)\n&#34;,&#34;\n&#34;,&#34;def create_new_task_tool(description: str) -&gt; str:\n&#34;,&#34;    \&#34;\&#34;\&#34;Creates a new project task with the given description.\&#34;\&#34;\&#34;\n&#34;,&#34;    task = task_manager.create_task(description)\n&#34;,&#34;    return f\&#34;Created task {task.id}: &#39;{task.description}&#39;.\&#34;\n&#34;,&#34;\n&#34;,&#34;def assign_priority_to_task_tool(task_id: str, priority: str) -&gt; str:\n&#34;,&#34;    \&#34;\&#34;\&#34;Assigns a priority (P0, P1, P2) to a given task ID.\&#34;\&#34;\&#34;\n&#34;,&#34;    if priority not in [\&#34;P0\&#34;, \&#34;P1\&#34;, \&#34;P2\&#34;]:\n&#34;,&#34;        return \&#34;Invalid priority. Must be P0, P1, or P2.\&#34;\n&#34;,&#34;    task = task_manager.update_task(task_id, priority=priority)\n&#34;,&#34;    return f\&#34;Assigned priority {priority} to task {task.id}.\&#34; if task else f\&#34;Task {task_id} not found.\&#34;\n&#34;,&#34;\n&#34;,&#34;def assign_task_to_worker_tool(task_id: str, worker_name: str) -&gt; str:\n&#34;,&#34;    \&#34;\&#34;\&#34;Assigns a task to a specific worker.\&#34;\&#34;\&#34;\n&#34;,&#34;    task = task_manager.update_task(task_id, assigned_to=worker_name)\n&#34;,&#34;    return f\&#34;Assigned task {task.id} to {worker_name}.\&#34; if task else f\&#34;Task {task_id} not found.\&#34;\n&#34;,&#34;\n&#34;,&#34;# All tools the PM agent can use\n&#34;,&#34;pm_tools = [\n&#34;,&#34;    Tool(\n&#34;,&#34;        name=\&#34;create_new_task\&#34;,\n&#34;,&#34;        func=create_new_task_tool,\n&#34;,&#34;        description=\&#34;Use this first to create a new task and get its ID.\&#34;,\n&#34;,&#34;        args_schema=CreateTaskArgs\n&#34;,&#34;    ),\n&#34;,&#34;    Tool(\n&#34;,&#34;        name=\&#34;assign_priority_to_task\&#34;,\n&#34;,&#34;        func=assign_priority_to_task_tool,\n&#34;,&#34;        description=\&#34;Use this to assign a priority to a task after it has been created.\&#34;,\n&#34;,&#34;        args_schema=PriorityArgs\n&#34;,&#34;    ),\n&#34;,&#34;    Tool(\n&#34;,&#34;        name=\&#34;assign_task_to_worker\&#34;,\n&#34;,&#34;        func=assign_task_to_worker_tool,\n&#34;,&#34;        description=\&#34;Use this to assign a task to a specific worker after it has been created.\&#34;,\n&#34;,&#34;        args_schema=AssignWorkerArgs\n&#34;,&#34;    ),\n&#34;,&#34;    Tool(\n&#34;,&#34;        name=\&#34;list_all_tasks\&#34;,\n&#34;,&#34;        func=task_manager.list_all_tasks,\n&#34;,&#34;        description=\&#34;Use this to list all current tasks and their status.\&#34;\n&#34;,&#34;    ),\n&#34;,&#34;]\n&#34;,&#34;\n&#34;,&#34;# --- 3. Project Manager Agent Definition ---\n&#34;,&#34;\n&#34;,&#34;pm_prompt_template = ChatPromptTemplate.from_messages([\n&#34;,&#34;    (\&#34;system\&#34;, \&#34;\&#34;\&#34;You are a focused Project Manager LLM agent. Your goal is to manage project tasks efficiently.\n&#34;,&#34;\n&#34;,&#34;    When you receive a new task request, follow these steps:\n&#34;,&#34;    1.  First, create the task with the given description using the `create_new_task` tool. You must do this first to get a `task_id`.\n&#34;,&#34;    2.  Next, analyze the user&#39;s request to see if a priority or an assignee is mentioned.\n&#34;,&#34;        - If a priority is mentioned (e.g., \&#34;urgent\&#34;, \&#34;ASAP\&#34;, \&#34;critical\&#34;), map it to P0. Use `assign_priority_to_task`.\n&#34;,&#34;        - If a worker is mentioned, use `assign_task_to_worker`.\n&#34;,&#34;    3.  If any information (priority, assignee) is missing, you must make a reasonable default assignment (e.g., assign P1 priority and assign to &#39;Worker A&#39;).\n&#34;,&#34;    4.  Once the task is fully processed, use `list_all_tasks` to show the final state.\n&#34;,&#34;\n&#34;,&#34;    Available workers: &#39;Worker A&#39;, &#39;Worker B&#39;, &#39;Review Team&#39;\n&#34;,&#34;    Priority levels: P0 (highest), P1 (medium), P2 (lowest)\n&#34;,&#34;    \&#34;\&#34;\&#34;),\n&#34;,&#34;    (\&#34;placeholder\&#34;, \&#34;{chat_history}\&#34;),\n&#34;,&#34;    (\&#34;human\&#34;, \&#34;{input}\&#34;),\n&#34;,&#34;    (\&#34;placeholder\&#34;, \&#34;{agent_scratchpad}\&#34;)\n&#34;,&#34;])\n&#34;,&#34;\n&#34;,&#34;# Create the agent executor\n&#34;,&#34;pm_agent = create_react_agent(llm, pm_tools, pm_prompt_template)\n&#34;,&#34;pm_agent_executor = AgentExecutor(\n&#34;,&#34;    agent=pm_agent,\n&#34;,&#34;    tools=pm_tools,\n&#34;,&#34;    verbose=True,\n&#34;,&#34;    handle_parsing_errors=True,\n&#34;,&#34;    memory=ConversationBufferMemory(memory_key=\&#34;chat_history\&#34;, return_messages=True)\n&#34;,&#34;)\n&#34;,&#34;\n&#34;,&#34;# --- 4. Simple Interaction Flow ---\n&#34;,&#34;\n&#34;,&#34;async def run_simulation():\n&#34;,&#34;    print(\&#34;--- Project Manager Simulation ---\&#34;)\n&#34;,&#34;\n&#34;,&#34;    # Scenario 1: Handle a new, urgent feature request\n&#34;,&#34;    print(\&#34;\\n[User Request] I need a new login system implemented ASAP. It should be assigned to Worker B.\&#34;)\n&#34;,&#34;    await pm_agent_executor.ainvoke({\&#34;input\&#34;: \&#34;Create a task to implement a new login system. It&#39;s urgent and should be assigned to Worker B.\&#34;})\n&#34;,&#34;\n&#34;,&#34;    print(\&#34;\\n\&#34; + \&#34;-\&#34;*60 + \&#34;\\n\&#34;)\n&#34;,&#34;\n&#34;,&#34;    # Scenario 2: Handle a less urgent content update with fewer details\n&#34;,&#34;    print(\&#34;[User Request] We need to review the marketing website content.\&#34;)\n&#34;,&#34;    await pm_agent_executor.ainvoke({\&#34;input\&#34;: \&#34;Manage a new task: Review marketing website content.\&#34;})\n&#34;,&#34;\n&#34;,&#34;    print(\&#34;\\n--- Simulation Complete ---\&#34;)\n&#34;,&#34;\n&#34;,&#34;# Run the simulation\n&#34;,&#34;if __name__ == \&#34;__main__\&#34;:\n&#34;,&#34;    asyncio.run(run_simulation())&#34;]}]}</span></span></code></pre>
+    
+
+    </div>
+</main>
+<footer>
+    Generated by <a href="https://github.com/antonmedv/gitmal">Gitmal</a>
+</footer>
+</body>
+</html>
